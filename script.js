@@ -6,62 +6,68 @@ let audioChunks = [];
 
 startBtn.addEventListener('click', async () => {
     try {
+        // Request microphone access
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
 
-        mediaRecorder.onstart = () => {
-            audioChunks = [];
-            startBtn.disabled = true;
-            status.textContent = 'Recording...';
+        // Check if permission was granted
+        if (stream) {
+            console.log("Microphone access granted.");
+            mediaRecorder = new MediaRecorder(stream);
 
-            // Automatically stop recording after 10 hours (10 hours = 36000000 milliseconds)
-            setTimeout(() => {
-                mediaRecorder.stop();
-            }, 30000);  // Stop after 10 hours
-        };
+            mediaRecorder.onstart = () => {
+                audioChunks = [];
+                startBtn.disabled = true;
+                status.textContent = 'Recording...';
 
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
+                // Set a timer to stop recording after 1 minute (60000 ms)
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    status.textContent = 'Recording stopped automatically after 1 minute.';
+                }, 30000);
+            };
 
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.controls = true;
-            document.body.appendChild(audio);
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
 
-            // Upload the audio to Cloudinary
-            try {
-                const formData = new FormData();
-                formData.append('file', audioBlob);
-                formData.append('upload_preset', 'dfgdmrcsb');  // Replace with your Cloudinary upload preset
-                formData.append('cloud_name', 'audio-recorder');  // Replace with your Cloudinary cloud name
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                audio.controls = true;
+                document.body.appendChild(audio);
 
-                const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/audio/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                // Upload the audio file to Cloudinary
+                uploadToCloudinary(audioBlob);
 
-                const data = await response.json();
-                if (data.secure_url) {
-                    status.textContent = 'Recording uploaded successfully!';
-                    console.log('Audio URL:', data.secure_url);
-                } else {
-                    status.textContent = 'Error uploading audio.';
-                }
-            } catch (error) {
-                console.error('Error uploading audio:', error);
-                status.textContent = 'Error uploading audio.';
-            }
+                startBtn.disabled = false;
+            };
 
-            startBtn.disabled = false;
-            status.textContent = 'Recording stopped and uploaded.';
-        };
-
-        mediaRecorder.start();
+            mediaRecorder.start();
+        }
     } catch (error) {
         console.error('Error accessing microphone:', error);
-        status.textContent = 'Microphone access denied.';
+        status.textContent = 'Microphone access denied or failed.';
     }
 });
+
+function uploadToCloudinary(audioBlob) {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.wav');
+    formData.append('upload_preset', 'audio_upload'); // Replace with your preset
+    formData.append('cloud_name', 'dfgdmrcsb'); // Replace with your Cloudinary cloud name
+
+    fetch('https://api.cloudinary.com/v1_1/dfgdmrcsb/audio/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Upload successful:', data);
+        alert('Audio uploaded successfully!');
+    })
+    .catch(error => {
+        console.error('Error uploading audio:', error);
+        alert('Audio upload failed.');
+    });
+}
