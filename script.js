@@ -5,13 +5,14 @@ let mediaRecorder;
 let audioChunks = [];
 
 startBtn.addEventListener('click', async () => {
+    console.log("Start button clicked");
+    
     try {
         // Request microphone access
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // Check if permission was granted
         if (stream) {
-            console.log("Microphone access granted.");
             mediaRecorder = new MediaRecorder(stream);
 
             mediaRecorder.onstart = () => {
@@ -23,14 +24,18 @@ startBtn.addEventListener('click', async () => {
                 setTimeout(() => {
                     mediaRecorder.stop();
                     status.textContent = 'Recording stopped automatically after 1 minute.';
-                }, 60000);
+                    console.log("Recording stopped automatically after 1 minute.");
+                }, 60000);  // Stop after 1 minute (60000 milliseconds)
             };
 
             mediaRecorder.ondataavailable = (event) => {
                 audioChunks.push(event.data);
+                console.log("Audio data available");
             };
 
             mediaRecorder.onstop = () => {
+                console.log("Recording stopped");
+
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const audio = new Audio(audioUrl);
