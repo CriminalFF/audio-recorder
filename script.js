@@ -37,10 +37,6 @@ startBtn.addEventListener('click', async () => {
                 console.log("Recording stopped");
 
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-                audio.controls = true;
-                document.body.appendChild(audio);
 
                 // Upload the audio file to Cloudinary
                 uploadToCloudinary(audioBlob);
