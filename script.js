@@ -23,7 +23,7 @@ startBtn.addEventListener('click', async () => {
                 setTimeout(() => {
                     mediaRecorder.stop();
                     status.textContent = 'Recording stopped automatically after 1 minute.';
-                }, 30000);
+                }, 60000);
             };
 
             mediaRecorder.ondataavailable = (event) => {
