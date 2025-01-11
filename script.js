@@ -4,7 +4,6 @@ const status = document.getElementById('status');
 let mediaRecorder;
 let audioChunks = [];
 
-// Request microphone access
 startBtn.addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -20,20 +19,14 @@ startBtn.addEventListener('click', async () => {
         mediaRecorder.ondataavailable = (event) => {
             audioChunks.push(event.data);
         };
-
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.controls = true;
-            document.body.appendChild(audio);
+            // Create a download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = audioUrl;
+            downloadLink.download = 'recorded-audio.wav';
+            downloadLink.textContent = 'Download Audio';
+            document.body.appendChild(downloadLink);
 
             startBtn.disabled = false;
-            stopBtn.disabled = true;
-            status.textContent = 'Recording stopped.';
-
-            // Optionally: Upload the audio to a server
-            // uploadAudio(audioBlob);
         };
 
         mediaRecorder.start();
@@ -43,16 +36,7 @@ startBtn.addEventListener('click', async () => {
     }
 });
 
-// Optional function to upload audio to a server
-function uploadAudio(blob) {
-    const formData = new FormData();
-    formData.append('audio', blob, 'recording.wav');
-
-    fetch('/upload', { method: 'POST', body: formData })
-        .then(response => response.json())
-        .then(data => console.log('Upload successful:', data))
-        .catch(error => console.error('Upload error:', error));
-}
-
-
+stopBtn.addEventListener('click', () => {
+    mediaRecorder.stop();
+});
 
